@@ -40,19 +40,19 @@ class SimpleVirus(object):
         clearProb: Maximum clearance probability (a float between 0-1).
         """
 
-        # TODO
+        self.maxBirthProb = maxBirthProb
+        self.clearProb = clearProb
 
     def doesClear(self):
 
-        """ Stochastically determines whether this virus particle is cleared from the
-        patient's body at a time step. 
+        """ Stochastically determines whether this virus particle is cleared 
+        from the  patient's body at a time step. 
         returns: True with probability self.clearProb and otherwise returns
         False.
         """
 
-        # TODO
+        return random.random() < self.clearProb
 
-    
     def reproduce(self, popDensity):
 
         """
@@ -74,9 +74,10 @@ class SimpleVirus(object):
         NoChildException if this virus particle does not reproduce.               
         """
 
-        # TODO
-
-
+        if random.random() < self.maxBirthProb * (1 - popDensity):
+            return SimpleVirus(self.maxBirthProb, self.clearProb)
+        else:
+            raise NoChildException
 
 class SimplePatient(object):
 
@@ -98,8 +99,8 @@ class SimplePatient(object):
         maxPop: the  maximum virus population for this patient (an integer)
         """
 
-        # TODO
-
+        self.viruses = viruses
+        self.maxPop = maxPop
 
     def getTotalPop(self):
 
@@ -108,8 +109,7 @@ class SimplePatient(object):
         returns: The total virus population (an integer)
         """
 
-        # TODO        
-
+        return len(self.viruses)
 
     def update(self):
 
@@ -127,10 +127,24 @@ class SimplePatient(object):
         returns: The total virus population at the end of the update (an
         integer)
         """
-
-        # TODO
-
-
+        survivingViruses = []
+        for virus in self.viruses:
+            if virus.doesClear():
+                survivingViruses.append(virus)
+        popDensity = len(survivingViruses) / self.maxPop
+        newViruses = survivingViruses[:]
+        for virus in survivingViruses:
+            try:
+                newViruses.append(virus.reproduce(popDensity))
+            except:
+                pass
+        self.viruses = newViruses[:]
+        return len(self.viruses)
+            
+vs = [SimpleVirus(.5,.5),]
+p = SimplePatient(vs, 100)
+for t in range(100):
+    print p.update()
 
 #
 # PROBLEM 2
