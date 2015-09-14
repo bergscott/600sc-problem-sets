@@ -127,24 +127,37 @@ class SimplePatient(object):
         returns: The total virus population at the end of the update (an
         integer)
         """
+        # determine whether each virus particle survives
         survivingViruses = []
         for virus in self.viruses:
-            if virus.doesClear():
+            if not virus.doesClear():
                 survivingViruses.append(virus)
-        popDensity = len(survivingViruses) / self.maxPop
+        # calculate current population density
+        popDensity = len(survivingViruses) / float(self.maxPop)
+        # determine whether each virus reproduces, if so add to list
         newViruses = survivingViruses[:]
         for virus in survivingViruses:
             try:
                 newViruses.append(virus.reproduce(popDensity))
-            except:
+            except NoChildException:
                 pass
+        # update self.viruses with new list of viruses
         self.viruses = newViruses[:]
+        # return total virus population
         return len(self.viruses)
-            
-vs = [SimpleVirus(.5,.5),]
-p = SimplePatient(vs, 100)
-for t in range(100):
-    print p.update()
+
+def test_simple():
+    zeroCount = 0
+    for x in range(50):          
+        vs = [SimpleVirus(.5,.2),]
+        p = SimplePatient(vs, 100)
+        for t in range(100):
+            p.update()
+        numv = len(p.viruses)
+        if numv == 0:
+            zeroCount += 1
+        print len(p.viruses)
+    print 'Zero count: ' + str(zeroCount)
 
 #
 # PROBLEM 2
@@ -157,5 +170,53 @@ def simulationWithoutDrug():
     Instantiates a patient, runs a simulation for 300 timesteps, and plots the
     total virus population as a function of time.    
     """
+    NUMTRIALS = 100
+    numViruses = [0 for x in range(300)]
+    hundredViruses = []
+    for x in range(100):
+        hundredViruses.append(SimpleVirus(0.1, 0.05))
+    for trial in range(NUMTRIALS):
+        viruses = hundredViruses[:]
+        patient = SimplePatient(viruses, 1000)
+        for t in range(300):
+            numViruses[t] += patient.update()
+    avgNumViruses = [100]
+    for i in range(len(numViruses)):
+        avgNumViruses.append(numViruses[i] / float(NUMTRIALS))
+    pylab.plot(avgNumViruses, label='average of 100 trials')
+    pylab.xlabel('time steps')
+    pylab.ylabel('virus population')
+    pylab.title('Growth over time of a virus population with max reproduction\n'+\
+                'prob 0.1 and max clearance prob 0.05 in untreated patient')
+    pylab.legend(loc='lower right')
+    pylab.show()
 
-    # TODO
+def testSimulationWithoutDrug(repro, clear, trials):
+    """
+    Run the simulation and plot the graph for problem 2 (no drugs are used,
+    viruses do not have any drug resistance).    
+    Instantiates a patient, runs a simulation for 300 timesteps, and plots the
+    total virus population as a function of time.    
+    """
+    numViruses = [0 for x in range(300)]
+    hundredViruses = []
+    for x in range(100):
+        hundredViruses.append(SimpleVirus(repro, clear))
+    for trial in range(trials):
+        viruses = hundredViruses[:]
+        patient = SimplePatient(viruses, 1000)
+        for t in range(300):
+            numViruses[t] += patient.update()
+    avgNumViruses = [100]
+    for i in range(len(numViruses)):
+        avgNumViruses.append(numViruses[i] / float(trials))
+    pylab.plot(avgNumViruses, label='average of ' + str(trials) + ' trials')
+    pylab.xlabel('time steps')
+    pylab.ylabel('virus population')
+    pylab.title('Average growth of a virus population with max reproduction\n' +\
+                'prob ' + str(repro) + ' and max clearance prob ' + str(clear) +\
+                ' in untreated patient')
+    pylab.legend(loc='lower right')
+    pylab.show()
+    
+
