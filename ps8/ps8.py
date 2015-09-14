@@ -36,14 +36,13 @@ class ResistantVirus(SimpleVirus):
         particle is resistant to neither guttagonol nor grimpex.
 
         mutProb: Mutation probability for this virus particle (a float). This is
-        the probability of the offspring acquiring or losing resistance to a drug.        
+        the probability of the offspring acquiring or losing resistance to a 
+        drug.        
 
         """
-
-
-        # TODO
-
-
+        SimpleVirus.__init__(self, maxBirthProb, clearProb)
+        self.resistances = resistances
+        self.mutProb = mutProb
 
     def isResistantTo(self, drug):
 
@@ -56,9 +55,7 @@ class ResistantVirus(SimpleVirus):
         returns: True if this virus instance is resistant to the drug, False
         otherwise.
         """
-
-        # TODO
-
+        return self.resistances[drug]
 
     def reproduce(self, popDensity, activeDrugs):
 
@@ -100,10 +97,30 @@ class ResistantVirus(SimpleVirus):
         maxBirthProb and clearProb values as this virus. Raises a
         NoChildException if this virus particle does not reproduce.         
         """
-        # TODO
+        for d in activeDrugs:
+            if not self.isResistantTo(d):
+                raise NoChildException
+        if random.random() < self.maxBirthProb * (1 - popDensity):
+            newResistances = {}
+            for r in self.resistances.keys():
+                if random.random() < self.mutProb:
+                    newResistances[r] = not self.resistances[r]
+                else:
+                    newResistances[r] = self.resistances[r]
+            return ResistantVirus(self.maxBirthProb, self.clearProb,
+                                  newResistances, self.mutProb)
+        else:
+            raise NoChildException
 
-            
-
+## def test_resistant_virus():
+##     v1 = ResistantVirus(0.5, 0.05, {'Bergozol':True}, 0.5)
+##     v2 = ResistantVirus(0.99, 0.05, {'Bergozol':False}, 0.5)
+##     def test_reproduce(virus):
+##         return virus.reproduce(0, ['Bergozol',])
+##     return test_reproduce(v1)
+##     
+## test_resistant_virus()
+ 
 class Patient(SimplePatient):
 
     """
