@@ -240,6 +240,16 @@ class Patient(SimplePatient):
 #
 # PROBLEM 2
 #
+# Constant Definitions and Variable Initializations
+RESISTANCES = {'guttagonol':False}
+NUM_TRIALS = 100
+MAX_POP = 1000
+REPRO_RATE = 0.1
+CLEAR_RATE = 0.05
+MUT_RATE = 0.005
+VIRUSES = []
+for v in xrange(100):
+    VIRUSES.append(ResistantVirus(REPRO_RATE,CLEAR_RATE,RESISTANCES,MUT_RATE))
 
 def simulationWithDrug():
 
@@ -251,22 +261,11 @@ def simulationWithDrug():
     total virus population vs. time and guttagonol-resistant virus population
     vs. time are plotted
     """
-    # Constant Definitions and Variable Initializations
-    RESISTANCES = {'guttagonol':False}
-    NUM_TRIALS = 30
-    maxPop = 1000
-    reproRate = 0.1
-    clearRate = 0.05
-    mutRate = 0.005
-    viruses = []
-    for v in xrange(100):
-        viruses.append(ResistantVirus(reproRate,clearRate,RESISTANCES,mutRate))
     totalPops = [0 for i in xrange(300)]
     resistantPops = [0 for i in xrange(300)]
-
     # Run simulation
     for trial in xrange(NUM_TRIALS):
-        patient = Patient(viruses[:], maxPop)
+        patient = Patient(VIRUSES[:], MAX_POP)
         # simulate pre-treatment time steps
         for time in xrange(150):
             totalPops[time] += patient.update()
@@ -277,7 +276,7 @@ def simulationWithDrug():
             totalPops[time] += patient.update()
             resistantPops[time] += patient.getResistPop(RESISTANCES.keys())
             
-    # calculate average populations
+    # cjalculate average populations
     avgTotalPops = [100]
     avgResistantPops = [0]
     for i in xrange(len(totalPops)):
@@ -287,23 +286,33 @@ def simulationWithDrug():
     # plot results
     pylab.plot(avgTotalPops, label='Total Virus Population')
     pylab.plot(avgResistantPops, label='Resistant Virus Population\n' +\
-                                       'mutation rate = ' + str(mutRate))
+                                       'mutation rate = ' + str(MUT_RATE))
     pylab.xlabel('time steps')
     pylab.ylabel('number of viruses')
     pylab.title('Average (of ' + str(NUM_TRIALS) + ' trials) ' +\
                 'growth of a virus population with max reproduction\n' +\
-                'prob ' + str(reproRate) + ' and max clearance prob ' +\
-                str(clearRate) + ' in a patient treated after 150 days')
+                'prob ' + str(REPRO_RATE) + ' and max clearance prob ' +\
+                str(CLEAR_RATE) + ' in a patient treated after 150 time steps')
     pylab.legend(loc='upper right')
     pylab.show()
 
-simulationWithDrug()
 #
 # PROBLEM 3
 #        
-
+def runSimulation(delay):
+    totalTime = delay + 150
+    totalPops = [0 for i in xrange(totalTime)]
+    patient = Patient(VIRUSES[:], MAX_POP)
+    # simulate pre-treatment time steps
+    for time in xrange(delay):
+        totalPops[time] = patient.update()
+    # add prescription and simulate post-treatment time steps
+    patient.addPrescription('guttagonol')
+    for time in xrange(delay, totalTime):
+        totalPops[time] = patient.update()
+    return totalPops[-1]
+            
 def simulationDelayedTreatment():
-
     """
     Runs simulations and make histograms for problem 5.
     Runs multiple simulations to show the relationship between delayed treatment
@@ -312,8 +321,29 @@ def simulationDelayedTreatment():
     150, 75, 0 timesteps (followed by an additional 150 timesteps of
     simulation).    
     """
+    histBins = [i*50 for i in range(11)]
+    delays = [0, 75, 150, 300]
+    subplot = 1
+    for d in delays:
+        results = []
+        for t in xrange(NUM_TRIALS):
+            results.append(runSimulation(d))
+        pylab.subplot(2, 2, subplot)
+        subplot += 1
+        pylab.hist(results, bins=histBins, label='delayed ' + str(d))
+        pylab.xlim(0, 500)
+        pylab.ylim(0, NUM_TRIALS)
+        pylab.ylabel('number of patients')
+        pylab.xlabel('total virus population')
+        pylab.title(str(d) + ' time step delay')
+        ##print str(d) + ' step delay: ' + str(results)
+    pylab.suptitle('Patient virus populations after 150 time steps when ' +\
+                   'prescription\n' +\
+                   'is applied after delays of 0, 75, 150, 300 time steps')
+    pylab.show()    
 
-    # TODO
+simulationDelayedTreatment()   
+
 
 #
 # PROBLEM 4
