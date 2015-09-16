@@ -448,9 +448,10 @@ def simulationTwoDrugsDelayedTreatment():
         ## print str(d)+' step mean: '+str(popMean)
         ## print str(d)+' step CV: '+str(popStd / popMean)
         ## print str(d) + ' step delay: ' + str(results)
-    pylab.suptitle('Patient virus populations 150 time steps after receiving '+
-            'guttagonol after first 150 time steps\n'+
-            'and then grimpex after an additional delay of 0, 75, 150, or 300' +             ' time steps (100 patient trial)')
+    pylab.suptitle('Patient virus populations 150 time steps after receiving '+\
+            'guttagonol after first 150 time steps\n'+\
+            'and then grimpex after an additional delay of 0, 75, 150, or 300'+\
+            ' time steps (100 patient trial)')
     pylab.show()    
 
 
