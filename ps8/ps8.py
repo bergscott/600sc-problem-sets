@@ -1,7 +1,7 @@
 # 6.00 Problem Set 8
 #
-# Name:
-# Collaborators:
+# Name: Scott Berg
+# Collaborators: None
 # Time:
 
 
@@ -179,9 +179,9 @@ class Patient(SimplePatient):
         resistantViruses = 0
         for virus in self.viruses:
             for drug in drugResist:
-                if virus.isResistantTo(drug):
-                    resistantViruses += 1
+                if not virus.isResistantTo(drug):
                     break
+            else: resistantViruses += 1
         return resistantViruses
 
     def update(self):
@@ -241,7 +241,7 @@ class Patient(SimplePatient):
 # PROBLEM 2
 #
 # Constant Definitions and Variable Initializations
-RESISTANCES = {'guttagonol':False}
+RESISTANCES = {'guttagonol':False, 'grimpex':False}
 NUM_TRIALS = 100
 MAX_POP = 1000
 REPRO_RATE = 0.1
@@ -300,6 +300,14 @@ def simulationWithDrug():
 # PROBLEM 3
 #        
 def runSimulation(delay):
+    """
+    Runs simulation of a Patient treated with 'guttagonol' after DELAY time
+    steps, then runs for another 150 time steps.  Returns the total virus
+    population at the end of the simulation.
+
+    delay: an int
+    returns: an int
+    """
     totalTime = delay + 150
     totalPops = [0 for i in xrange(totalTime)]
     patient = Patient(VIRUSES[:], MAX_POP)
@@ -311,7 +319,7 @@ def runSimulation(delay):
     for time in xrange(delay, totalTime):
         totalPops[time] = patient.update()
     return totalPops[-1]
-            
+
 def simulationDelayedTreatment():
     """
     Runs simulations and make histograms for problem 5.
@@ -336,13 +344,72 @@ def simulationDelayedTreatment():
         pylab.ylabel('number of patients')
         pylab.xlabel('total virus population')
         pylab.title(str(d) + ' time step delay')
-        ##print str(d) + ' step delay: ' + str(results)
+        popStd = numpy.std(results)
+        popMean = numpy.mean(results)
+        ## print str(d)+' step delay standard deviation: '+str(popStd)
+        ## print str(d)+' step mean: '+str(popMean)
+        ## print str(d)+' step CV: '+str(popStd / popMean)
+        ## print str(d) + ' step delay: ' + str(results)
     pylab.suptitle('Patient virus populations after 150 time steps when ' +\
                    'prescription\n' +\
                    'is applied after delays of 0, 75, 150, 300 time steps')
     pylab.show()    
 
-simulationDelayedTreatment()   
+## simulationDelayedTreatment()   
+
+## def simulationDelayedTreatment_test():
+##     """
+##     Runs simulations and make histograms for problem 5.
+##     Runs multiple simulations to show the relationship between delayed treatment
+##     and patient outcome.
+##     Histograms of final total virus populations are displayed for delays of 300,
+##     150, 75, 0 timesteps (followed by an additional 150 timesteps of
+##     simulation).    
+##     """
+##     histBins = [i*50 for i in range(11)]
+##     delays = [0, 75, 150, 300]
+##     subplot = 1
+##     for d in delays:
+##         means = []
+##         remission_counts = []
+##         for n in xrange(50):
+##             results = []
+##             remission_count = 0
+##             for t in xrange(NUM_TRIALS):
+##                 vPop = runSimulation(d)
+##                 results.append(vPop)
+##                 if vPop <= 50:
+##                     remission_count += 1
+##             pylab.subplot(2, 2, subplot)
+##             pylab.hist(results, bins=histBins, label='delayed ' + str(d))
+##             pylab.xlim(0, 500)
+##             pylab.ylim(0, NUM_TRIALS)
+##             pylab.ylabel('number of patients')
+##             pylab.xlabel('total virus population')
+##             pylab.title(str(d) + ' time step delay')
+##             ##popStd = numpy.std(results)
+##             popMean = numpy.mean(results)
+##             means.append(popMean)
+##             remission_counts.append(remission_count)
+##             ##print str(d)+' step delay standard deviation: '+str(popStd)
+##             ##print str(d)+' step mean: '+str(popMean)
+##             ##print str(d)+' step CV: '+str(popStd / popMean)
+##             ##print str(d) + ' step delay: ' + str(results)
+##         print str(d)+' step delay Std of means: ' + str(numpy.std(means))
+##         remMean = numpy.mean(remission_counts) / NUM_TRIALS
+##         remStd = numpy.std(remission_counts) / NUM_TRIALS
+##         remSEM = (remStd / (50)**0.5) 
+##         print str(d)+' step delay remission count mean: '+str(remMean)
+##         print str(d)+' step delay remission count std: '+str(remStd)
+##         print str(d)+' step delay remission count SEM: '+str(remSEM)
+##         print str(d)+' step delay remission count +/-: '+str(2.01 * remSEM)
+##         subplot += 1
+##     pylab.suptitle('Patient virus populations after 150 time steps when ' +\
+##                    'prescription\n' +\
+##                    'is applied after delays of 0, 75, 150, 300 time steps')
+##     pylab.show()    
+##     
+## simulationDelayedTreatment_test()
 
 
 #
@@ -360,11 +427,61 @@ def simulationTwoDrugsDelayedTreatment():
     150, 75, 0 timesteps between adding drugs (followed by an additional 150
     timesteps of simulation).
     """
+    histBins = [i*50 for i in range(11)]
+    delays = [0, 75, 150, 300]
+    subplot = 1
+    for d in delays:
+        results = []
+        for t in xrange(NUM_TRIALS):
+            results.append(runSimulationTwoDrugs(d))
+        pylab.subplot(2, 2, subplot)
+        subplot += 1
+        pylab.hist(results, bins=histBins, label='delayed ' + str(d))
+        pylab.xlim(0, 500)
+        pylab.ylim(0, NUM_TRIALS)
+        pylab.ylabel('number of patients')
+        pylab.xlabel('total virus population')
+        pylab.title(str(d) + ' time step delay')
+        popStd = numpy.std(results)
+        popMean = numpy.mean(results)
+        ## print str(d)+' step delay standard deviation: '+str(popStd)
+        ## print str(d)+' step mean: '+str(popMean)
+        ## print str(d)+' step CV: '+str(popStd / popMean)
+        ## print str(d) + ' step delay: ' + str(results)
+    pylab.suptitle('Patient virus populations 150 time steps after receiving '+
+            'guttagonol after first 150 time steps\n'+
+            'and then grimpex after an additional delay of 0, 75, 150, or 300' +             ' time steps (100 patient trial)')
+    pylab.show()    
 
-    # TODO
 
+def runSimulationTwoDrugs(delay):
+    """
+    Runs simulation of a Patient treated with 'guttagonol' after 150 time
+    steps, then runs for another DELAY time steps before administering 
+    'grimpex'. Runs simulation for an additional 150 steps before returning
+    the total virus population at the end of the simulation.
 
+    delay: an int
+    returns: an int
+    """
+    treatment2Time = delay + 150
+    totalTime = delay + 300
+    totalPops = [0 for i in xrange(totalTime)]
+    patient = Patient(VIRUSES[:], MAX_POP)
+    # simulate pre-treatment time steps
+    for time in xrange(150):
+        totalPops[time] = patient.update()
+    # add prescription and simulate DELAY time steps
+    patient.addPrescription('guttagonol')
+    for time in xrange(150, treatment2Time):
+        totalPops[time] = patient.update()
+    # add 2nd prescription and simulate post-treatment time steps
+    patient.addPrescription('grimpex')
+    for time in xrange(treatment2Time, totalTime):
+        totalPops[time] = patient.update()
+    return totalPops[-1]
 
+## simulationTwoDrugsDelayedTreatment()
 #
 # PROBLEM 5
 #    
@@ -380,7 +497,185 @@ def simulationTwoDrugsVirusPopulations():
     a simulations for which drugs are administered simultaneously.        
 
     """
-    #TODO
+    totalPops = [0 for i in xrange(600)]
+    guttagResistant = [0 for i in xrange(600)]
+    grimpexResistant = [0 for i in xrange(600)]
+    bothResistant = [0 for i in xrange(600)]
+    # Run simulation
+    for trial in xrange(NUM_TRIALS):
+        patient = Patient(VIRUSES[:], MAX_POP)
+        # simulate pre-treatment time steps
+        for time in xrange(150):
+            totalPops[time] += patient.update()
+            guttagResistant[time] += patient.getResistPop(['guttagonol'])
+            grimpexResistant[time] += patient.getResistPop(['grimpex'])
+            bothResistant[time] += patient.getResistPop(RESISTANCES.keys())
+        # add prescription for guttagonol and simulate 300 time steps
+        patient.addPrescription('guttagonol')
+        for time in xrange(150, 450):
+            totalPops[time] += patient.update()
+            guttagResistant[time] += patient.getResistPop(['guttagonol'])
+            grimpexResistant[time] += patient.getResistPop(['grimpex'])
+            bothResistant[time] += patient.getResistPop(RESISTANCES.keys())
+        # add precription for grimpex and simulate 150 additional time steps
+        patient.addPrescription('grimpex')
+        for time in xrange(450, 600):
+            totalPops[time] += patient.update()
+            guttagResistant[time] += patient.getResistPop(['guttagonol'])
+            grimpexResistant[time] += patient.getResistPop(['grimpex'])
+            bothResistant[time] += patient.getResistPop(RESISTANCES.keys())
+    # calculate average populations
+    avgTotalPops = [100]
+    avgGuttagR = [0]
+    avgGrimpexR = [0]
+    avgResistantPops = [0]
+    for i in xrange(len(totalPops)):
+        avgTotalPops.append(totalPops[i] / NUM_TRIALS)
+        avgGuttagR.append(guttagResistant[i] / NUM_TRIALS)
+        avgGrimpexR.append(grimpexResistant[i] / NUM_TRIALS)
+        avgResistantPops.append(bothResistant[i] / NUM_TRIALS)
+
+    # plot results
+    pylab.plot(avgTotalPops, label='Total Virus Population')
+    pylab.plot(avgGuttagR, label='Guttagonol Resistant')
+    pylab.plot(avgGrimpexR, label='Grimpex Resistant')
+    pylab.plot(avgResistantPops, label='Resistant to Both\n' +\
+                                       'mutation rate = ' + str(MUT_RATE))
+    pylab.xlabel('time steps')
+    pylab.ylabel('number of viruses')
+    pylab.title('Average (of ' + str(NUM_TRIALS) + ' trials) ' +\
+                'growth of a virus population with max reproduction ' +\
+                'prob ' + str(REPRO_RATE) + ' and max clearance prob ' +\
+                str(CLEAR_RATE) + '\nin a patient treated after 150 time steps'+\
+                ' with guttagonol and then treated with grimpex after another' +\
+                ' 300 time steps')
+    pylab.legend(loc='upper right')
+
+    #SIMULATION 2
+    totalPops = [0 for i in xrange(600)]
+    guttagResistant = [0 for i in xrange(600)]
+    grimpexResistant = [0 for i in xrange(600)]
+    bothResistant = [0 for i in xrange(600)]
+    # Run simulation
+    for trial in xrange(NUM_TRIALS):
+        patient = Patient(VIRUSES[:], MAX_POP)
+        # simulate pre-treatment time steps
+        for time in xrange(150):
+            totalPops[time] += patient.update()
+            guttagResistant[time] += patient.getResistPop(['guttagonol'])
+            grimpexResistant[time] += patient.getResistPop(['grimpex'])
+            bothResistant[time] += patient.getResistPop(RESISTANCES.keys())
+        # add prescriptions for guttagonol and and grimpex,
+        # simulate 150 post-treatment time steps
+        patient.addPrescription('guttagonol')
+        patient.addPrescription('grimpex')
+        for time in xrange(150, 600):
+            totalPops[time] += patient.update()
+            guttagResistant[time] += patient.getResistPop(['guttagonol'])
+            grimpexResistant[time] += patient.getResistPop(['grimpex'])
+            bothResistant[time] += patient.getResistPop(RESISTANCES.keys())
+    # calculate average populations
+    avgTotalPops = [100]
+    avgGuttagR = [0]
+    avgGrimpexR = [0]
+    avgResistantPops = [0]
+    for i in xrange(len(totalPops)):
+        avgTotalPops.append(totalPops[i] / NUM_TRIALS)
+        avgGuttagR.append(guttagResistant[i] / NUM_TRIALS)
+        avgGrimpexR.append(grimpexResistant[i] / NUM_TRIALS)
+        avgResistantPops.append(bothResistant[i] / NUM_TRIALS)
+
+    # plot results
+    pylab.figure()
+    pylab.plot(avgTotalPops, label='Total Virus Population')
+    pylab.plot(avgGuttagR, label='Guttagonol Resistant')
+    pylab.plot(avgGrimpexR, label='Grimpex Resistant')
+    pylab.plot(avgResistantPops, label='Resistant to Both\n' +\
+                                       'mutation rate = ' + str(MUT_RATE))
+    pylab.xlabel('time steps')
+    pylab.ylabel('number of viruses')
+    pylab.title('Average (of ' + str(NUM_TRIALS) + ' trials) ' +\
+                'growth of a virus population with max reproduction ' +\
+                'prob ' + str(REPRO_RATE) + ' and max clearance prob ' +\
+                str(CLEAR_RATE) + '\nin a patient treated after 150 time steps'+\
+                ' with both guttagonol and grimpex')
+    pylab.legend(loc='upper right')
+
+    pylab.show()
+
+##simulationTwoDrugsVirusPopulations()
+
+
+def simulationTwoDrugsVirusPopulations_test():
+
+    """
+
+    Run simulations and plot graphs examining the relationship between
+    administration of multiple drugs and patient outcome.
+    Plots of total and drug-resistant viruses vs. time are made for a
+    simulation with a 300 time step delay between administering the 2 drugs and
+    a simulations for which drugs are administered simultaneously.        
+
+    """
+    totalPops = [0 for i in xrange(600)]
+    guttagResistant = [0 for i in xrange(600)]
+    grimpexResistant = [0 for i in xrange(600)]
+    bothResistant = [0 for i in xrange(600)]
+    # Run simulation
+    for trial in xrange(NUM_TRIALS):
+        patient = Patient(VIRUSES[:], MAX_POP)
+        # simulate pre-treatment time steps
+        for time in xrange(150):
+            totalPops[time] = patient.update()
+        # add prescription for guttagonol and simulate 300 time steps
+        patient.addPrescription('guttagonol')
+        for time in xrange(150, 450):
+            totalPops[time] = patient.update()
+        # add precription for grimpex and simulate 150 additional time steps
+        patient.addPrescription('grimpex')
+        for time in xrange(450, 600):
+            totalPops[time] = patient.update()
+        pylab.plot(totalPops, label='Total Virus Population')
+    pylab.xlabel('time steps')
+    pylab.ylabel('number of viruses')
+    pylab.title('growth of a virus population with max reproduction ' +\
+                'prob ' + str(REPRO_RATE) + ' and max clearance prob ' +\
+                str(CLEAR_RATE) + '\nin a patient treated after 150 time steps'+\
+                ' with guttagonol\nand then treated with grimpex after another'+\
+                ' 300 time steps (' + str(NUM_TRIALS) + ' trials)')
+
+    #SIMULATION 2
+    totalPops = [0 for i in xrange(300)]
+    pylab.figure()
+    # Run simulation
+    for trial in xrange(NUM_TRIALS):
+        patient = Patient(VIRUSES[:], MAX_POP)
+        # simulate pre-treatment time steps
+        for time in xrange(150):
+            totalPops[time] = patient.update()
+        # add prescriptions for guttagonol and and grimpex,
+        # simulate 150 post-treatment time steps
+        patient.addPrescription('guttagonol')
+        patient.addPrescription('grimpex')
+        for time in xrange(150, 300):
+            totalPops[time] = patient.update()
+        pylab.plot(totalPops, label='Total Virus Population')
+    pylab.xlabel('time steps')
+    pylab.ylabel('number of viruses')
+    pylab.title('growth of a virus population with max reproduction ' +\
+                'prob ' + str(REPRO_RATE) + ' and max clearance prob ' +\
+                str(CLEAR_RATE) + '\nin a patient treated after 150 time steps'+\
+                ' with both guttagonol and grimpex (' + str(NUM_TRIALS) +\
+                ' trials)')
+
+    pylab.show()
+
+## simulationTwoDrugsVirusPopulations_test()
+
+
+
+
+
 
 
 
