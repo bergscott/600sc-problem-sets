@@ -23,16 +23,13 @@ def loadSubjects(filename):
 
     returns: dictionary mapping subject name to (value, work)
     """
-
-    # The following sample code reads lines from the specified file and prints
-    # each one.
     inputFile = open(filename)
+    subjectDict = {}
     for line in inputFile:
-        print line
-
-    # TODO: Instead of printing each line, modify the above to parse the name,
-    # value, and work of each subject and create a dictionary mapping the name
-    # to the (value, work).
+        line = line.strip()
+        splitLine = line.split(',')
+        subjectDict[splitLine[0]] = (int(splitLine[1]), int(splitLine[2]))
+    return subjectDict
 
 def printSubjects(subjects):
     """
@@ -64,21 +61,21 @@ def cmpValue(subInfo1, subInfo2):
     Returns True if value in (value, work) tuple subInfo1 is GREATER than
     value in (value, work) tuple in subInfo2
     """
-    # TODO...
+    return subInfo1[0] > subInfo2[0]
 
 def cmpWork(subInfo1, subInfo2):
     """
     Returns True if work in (value, work) tuple subInfo1 is LESS than than work
     in (value, work) tuple in subInfo2
     """
-    # TODO...
+    return subInfo1[1] < subInfo2[1]
 
 def cmpRatio(subInfo1, subInfo2):
     """
     Returns True if value/work in (value, work) tuple subInfo1 is 
     GREATER than value/work in (value, work) tuple in subInfo2
     """
-    # TODO...
+    return subInfo1[0]/float(subInfo1[1]) > subInfo2[0]/float(subInfo2[1])
 
 def greedyAdvisor(subjects, maxWork, comparator):
     """
@@ -92,7 +89,22 @@ def greedyAdvisor(subjects, maxWork, comparator):
     comparator: function taking two tuples and returning a bool
     returns: dictionary mapping subject name to (value, work)
     """
-    # TODO...
+    result = {}
+    subjects = subjects.copy()
+    while subjects != {} and maxWork > 0:
+        bestSubjectKey = None
+        for s in subjects.keys():
+            if subjects[s][1] > maxWork:
+                del subjects[s]
+            elif bestSubjectKey == None or \
+                    comparator(subjects[s], bestSubjectValue):
+                bestSubjectKey = s
+                bestSubjectValue = subjects[s]
+        if bestSubjectKey != None:
+            result[bestSubjectKey] = bestSubjectValue
+            del subjects[bestSubjectKey]
+            maxWork -= bestSubjectValue[1]
+    return result
 
 #
 # Problem 3: Subject Selection By Brute Force
@@ -107,6 +119,65 @@ def bruteForceAdvisor(subjects, maxWork):
     maxWork: int >= 0
     returns: dictionary mapping subject name to (value, work)
     """
-    # TODO...
+    allCombinations = get_combinations(subjects.keys())
+    bestCombination = []
+    bestValue = 0
+    for combination in allCombinations:
+        if total_work(combination, subjects) <= maxWork:
+            totVal = total_value(combination, subjects)
+            if totVal > bestValue:
+                bestCombination = combination
+                bestValue = totVal
+    result = {}
+    for subj in bestCombination:
+        result[subj] = subjects[subj]
+    return result
 
+def total_value(subjectList, subjectDict):
+    """
+    Returns the total value of all of the subjects in SUBJECTLIST.  Values are
+    derived from entries in SUBJECTDICT.
 
+    subjectList: a list
+    subjectDict: a dict mapping subject name to (value, work)
+    returns: an int
+    """
+    value = 0
+    for subj in subjectList:
+        value += subjectDict[subj][0]
+    return value
+
+def total_work(subjectList, subjectDict):
+    """
+    Returns the total work of all of the subjects in SUBJECTLIST.  Work 
+    values are derived from entries in SUBJECTDICT.
+
+    subjectList: a list
+    subjectDict: a dict mapping subject name to (value, work)
+    returns: an int
+    """
+    work = 0
+    for subj in subjectList:
+        work += subjectDict[subj][1]
+    return work
+
+def get_combinations(l):
+    """
+    Returns a list of all combinations (without repitition)
+    of the elements in the given list.
+
+    l: a list
+    returns: a list
+    """
+    if len(l) == 0:
+        return [[],]
+    else:
+        restCombs = get_combinations(l[1:])
+        firstCombs = [[l[0]] + restCombs[i] for i in range(len(restCombs))]
+        return firstCombs + restCombs
+
+## shortSubs = loadSubjects(SHORT_SUBJECT_FILENAME)
+## printSubjects(shortSubs)
+## mw = 5
+## printSubjects(bruteForceAdvisor(shortSubs, mw))
+## printSubjects(greedyAdvisor(shortSubs, mw, cmpRatio))
