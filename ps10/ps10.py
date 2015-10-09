@@ -30,7 +30,10 @@ class Point(object):
         return self.name
 
 class County(Point):
-    weights = pylab.array([1.0] * 14)
+##     weights = pylab.array([1.0] * 14)
+##     weights[2] = 0.0
+    weights = pylab.array([0.4, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                           0.0, 0.1, 0.05, 0.4, 0.0, 0.1, 0.0])
     
     # Override Point.distance to use County.weights to decide the
     # significance of each dimension
@@ -321,6 +324,42 @@ def graphPredictionErr(points, dimension, kvals = [25, 50, 75, 100, 125, 150], c
     appropriate values of k and graph the error in the resulting predictions,
     as described in Problem 3.
     """
+    holdoutSet, trainingSet = randomPartition(points, .2)
+    dimError = [0] * len(kvals)
+    for i in range(len(kvals)):
+        # get clusters using training set
+        clusters, maxDist = kmeans(trainingSet, kvals[i], cutoff, 
+                                   type(trainingSet[0]))
+        # get average dimension level for each cluster
+        avgDim = {}
+        for j in xrange(len(clusters)):
+            totalDim = 0
+            for p in clusters[j].getPoints():
+                totalDim += p.getOriginalAttrs()[dimension]
+            avgDim[j] = totalDim / len(clusters[j].getPoints())
+        for p in holdoutSet:
+            # find best cluster for each point
+            index = 0
+            minDist = p.distance(clusters[0].getCentroid())
+            for j in xrange(len(clusters)):
+                if p.distance(clusters[j].getCentroid()) < minDist:
+                    minDist = p.distance(clusters[j].getCentroid())
+                    index = j
+            # calculate prediction error
+            dimError[i] += (p.getOriginalAttrs()[dimension] - avgDim[index])**2
+    avgDimError = [totalError/len(holdoutSet) for totalError in dimError]
+    pylab.plot(kvals, avgDimError, 'bo')
+##     a,b,c = pylab.polyfit(kvals, avgDimError, 2)
+##     fitDimError = [a*x**2 + b*x + c for x in kvals]
+##     pylab.plot(kvals, fitDimError, 'b-')
+    a,b = pylab.polyfit(kvals, avgDimError, 1)
+    fitDimError = [a*x + b for x in kvals]
+    pylab.plot(kvals, fitDimError, 'b-')
+    pylab.xlabel('Number of clusters')
+    pylab.ylabel('Avg Prediction Error')
+    pylab.title('Effect of the number of clusters on the average error of\n' +\
+                'the prediction of the poverty levels of a county')
+    pylab.show()
 
-	# Your Code Here
-    
+graphPredictionErr(points, 2)
+
