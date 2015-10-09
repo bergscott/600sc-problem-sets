@@ -1,6 +1,6 @@
 # Problem Set 10
-# Name:
-# Collaborators:
+# Name: Scott Berg
+# Collaborators: None
 # Time:
 
 #Code shared across examples
@@ -221,7 +221,7 @@ def test(points, k = 200, cutoff = 0.1):
 
         
 points = buildCountyPoints('counties.txt')
-random.seed(123)
+#random.seed(123)
 testPoints = random.sample(points, len(points)/10)
 
 
@@ -230,13 +230,91 @@ testPoints = random.sample(points, len(points)/10)
 def graphRemovedErr(points, kvals = [25, 50, 75, 100, 125, 150], cutoff = 0.1):
     """
     Should produce graphs of the error in training and holdout point sets, and
-    the ratio of the error of the points, after clustering for the given values of k.
+    the ratio of the error of the points, 
+    after clustering for the given values of k.
     For details see Problem 1.
     """
+    # Get Error for traing and holdout sets for each k-value
+    trainingSetError = [0] * len(kvals)
+    holdoutSetError = [0] * len(kvals)
+    toPrint = ''
+    for i in range(len(kvals)):
+        # split set and get clusters using training set
+        holdoutSet, trainingSet = randomPartition(points, .2)
+        clusters, maxDist = kmeans(trainingSet, kvals[i], cutoff, 
+                                   type(trainingSet[0]))
+        # get total error for training set
+        for c in clusters:
+            for p in c.getPoints():
+                trainingSetError[i] += p.distance(c.getCentroid())**2
+        # get total error for holdout set (finding best cluster for each pt)
+        for p in holdoutSet:
+            minDist = p.distance(clusters[0].getCentroid())
+            for c in clusters:
+                if p.distance(c.getCentroid()) < minDist:
+                    minDist = p.distance(c.getCentroid())
+            holdoutSetError[i] += minDist**2
+        toPrint += 'Training Set Error k = {}: {}\n'.format(kvals[i],
+                                                            trainingSetError[i]) 
+        toPrint += 'Holdout Set Error k = {}: {}\n'.format(kvals[i],
+                                                           holdoutSetError[i])
+    print toPrint
+##     log = open('logfile.txt', 'w')
+##     log.write(toPrint)
+##     log.close()
 
-    # Your Code Here
+    # Plot Training and Holdout Error by kvals getting best fit curves
+    pylab.plot(kvals, trainingSetError, 'bo', label='Training Set Error')
+    pylab.plot(kvals, holdoutSetError, 'ro', label='Holdout Set Error')
+    a, b, c = pylab.polyfit(kvals, trainingSetError, 2)
+    trainingFit = [a*x**2 + b*x + c for x in kvals]
+    pylab.plot(kvals, trainingFit, 'b-')
+    a, b = pylab.polyfit(kvals, holdoutSetError, 1)
+    holdoutFit = [a*x + b for x in kvals]
+    pylab.plot(kvals, holdoutFit, 'r-')
+    pylab.xlabel('Number of Clusters')
+    pylab.ylabel('Total Error')
+    pylab.legend(loc='best')
+    pylab.title('Relationship between total error and number of clusters\n' +\
+                'when using k-means to cluster US counties')
 
+    # Compute ratio of holdout to training set error and plot
+    ratio = [0] * len(kvals)
+    for i in range(len(kvals)):
+        ratio[i] = holdoutSetError[i] / trainingSetError[i]
+    pylab.figure()
+    pylab.plot(kvals, ratio, 'bo')
+    a,b = pylab.polyfit(kvals, ratio, 1)
+    ratioFit = [a*x + b for x in kvals]
+    pylab.plot(kvals, ratioFit, 'b-')
+    pylab.xlabel('Number of clusters')
+    pylab.ylabel('Holdout Set Error / Training Set Error')
+    pylab.title('Effect of k (clusters) on ratio of holdout set error over\n' +\
+                'training set error')
 
+    pylab.show()
+
+## graphRemovedErr(points)
+
+## Problem 2
+def print_cluster_containing_point(clusters, pointName):
+    for c in clusters:
+        for p in c.getPoints():
+            if p.getName() == pointName:
+                for p in c.getPoints():
+                    print p,
+                print
+                return None
+
+def show_my_cluster(points):
+    homeName = 'WIBrown'
+    for i in range(3):
+        clusters, maxDist = kmeans(points, 50, 0.1, type(points[0]))
+        print_cluster_containing_point(clusters, homeName)
+
+## show_my_cluster(points)
+
+## Problem 3
 def graphPredictionErr(points, dimension, kvals = [25, 50, 75, 100, 125, 150], cutoff = 0.1):
     """
     Given input points and a dimension to predict, should cluster on the
