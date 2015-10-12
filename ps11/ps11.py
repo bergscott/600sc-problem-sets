@@ -7,7 +7,7 @@
 #
 
 import string
-from graph import Digraph, Edge, Node
+from graph import *
 
 #
 # Problem 2: Building up the Campus Map
@@ -34,9 +34,28 @@ def load_map(mapFilename):
     Returns:
         a directed graph representing the map
     """
-    #TODO
     print "Loading map from file..."
+    MITmap = MITmapGraph()
+    buildings = {}
+    datFile = open(mapFilename, 'r')
+    pathList = datFile.readlines()
+    datFile.close()
+    for path in pathList:
+        splitLine = path.strip().split()
+        for elem in splitLine[0:4]: print elem,
+        for building in splitLine[0:2]:
+            if building not in buildings.keys():
+                buildings[building] = Node(building)
+                MITmap.addNode(buildings[building])
+        MITmap.addEdge(BuildingRoute(buildings[splitLine[0]], 
+                                     buildings[splitLine[1]],
+                                     int(splitLine[2]), int(splitLine[3])))
+    print "Done!"
+    return MITmap
+        
 
+MITmap = load_map('mit_map.txt')
+print MITmap
 #
 # Problem 3: Finding the Shortest Path using Brute Force Search
 #
@@ -68,9 +87,114 @@ def bruteForceSearch(digraph, start, end, maxTotalDist, maxDistOutdoors):
         If there exists no path that satisfies maxTotalDist and
         maxDistOutdoors constraints, then raises a ValueError.
     """
-    #TODO
-    pass
+    allPaths = getallPaths(digraph, digraph.getNode(start), digraph.getNode(end))
+    bestPath = None
+    bestDist = None
+    for p in allPaths:
+        if totalDist(p) < maxTotalDist \
+                and outdoorDist(p) < maxDistOutdoors \
+                and (totalDist(p) < bestDist or bestDist == None):
+            bestPath = p
+            bestDist = totalDist(p)
+    if bestPath == None:
+        raise ValueError('No path fits constraints')
+    else:
+        return [str(p[0]) for p in bestPath]
 
+## def getallPaths(digraph, start, end, visited=[], parents=[], foundPaths=[]):
+##     if start == end:
+##         return [str(start)]
+##     if parents == []:
+##         visited = visited + [str(start)]
+##     for node in digraph.childrenOf(start):
+##         if (str(node) not in visited):
+##             if node == end:
+##                 foundPaths.append(parents + [str(start), str(node)])
+##             else:
+##                 visited = visited + [str(node)]
+##                 print "Start: {}".format(str(start))
+##                 print "Visited: {}".format(visited)
+##                 getallPaths(digraph, node, end, visited, 
+##                             parents + [str(start)], foundPaths)
+##     if parents == []:
+##         return foundPaths
+##     else: return None
+    
+def getallPaths(digraph, start, end, parents=[], foundPaths=[]):
+    if type(start) == tuple:
+        startNode = start[0]
+    else:
+        parents = [(start, 0, 0)]
+        startNode = start
+    if startNode == end:
+        return start
+    for path in digraph.childrenOf(startNode):
+        if (path[0] not in [p[0] for p in parents]):
+            ## print 'Parents: {}'.format(parents)
+            ## print 'In {} checking {}'.format(start, path)
+            if path[0] == end:
+                foundPaths.append(parents + [path])
+            else:
+                getallPaths(digraph, path, end, 
+                            parents + [path], foundPaths)
+    if len(parents) == 1:
+        return foundPaths
+    else: return None
+
+def totalDist(path):
+    tot = 0
+    for p in path:
+        tot += p[1] 
+    return tot
+
+def outdoorDist(path):
+    tot = 0
+    for p in path:
+        tot += p[2] 
+    return tot
+
+def test():
+    dg = Digraph()
+    nodes = {}
+    for n in range(1,7):
+        nodes[n] = Node(n)
+        dg.addNode(nodes[n])
+    dg.addEdge(Edge(nodes[1], nodes[2]))
+    dg.addEdge(Edge(nodes[1], nodes[3]))
+    dg.addEdge(Edge(nodes[2], nodes[4]))
+    dg.addEdge(Edge(nodes[2], nodes[5]))
+    dg.addEdge(Edge(nodes[3], nodes[5]))
+    dg.addEdge(Edge(nodes[3], nodes[6]))
+    dg.addEdge(Edge(nodes[6], nodes[5]))
+    dg.addEdge(Edge(nodes[5], nodes[4]))
+    dg.addEdge(Edge(nodes[2], nodes[1]))
+    dg.addEdge(Edge(nodes[2], nodes[3]))
+    print getallPaths(dg, nodes[1], nodes[5])
+
+def test2():
+    mg = MITmapGraph()
+    nodes = {}
+    for n in range(1,7):
+        nodes[n] = Node(n)
+        mg.addNode(nodes[n])
+    mg.addEdge(BuildingRoute(nodes[1], nodes[2], 15, 5))
+    mg.addEdge(BuildingRoute(nodes[1], nodes[3], 15, 5))
+    mg.addEdge(BuildingRoute(nodes[2], nodes[4], 15, 5))
+    mg.addEdge(BuildingRoute(nodes[2], nodes[5], 15, 5))
+    mg.addEdge(BuildingRoute(nodes[3], nodes[5], 15, 5))
+    mg.addEdge(BuildingRoute(nodes[3], nodes[6], 15, 5))
+    mg.addEdge(BuildingRoute(nodes[6], nodes[5], 15, 5))
+    mg.addEdge(BuildingRoute(nodes[3], nodes[6], 22, 1))
+    mg.addEdge(BuildingRoute(nodes[5], nodes[4], 15, 5))
+    mg.addEdge(BuildingRoute(nodes[2], nodes[1], 15, 5))
+    mg.addEdge(BuildingRoute(nodes[2], nodes[3], 15, 5))
+    print getallPaths(mg, nodes[1], nodes[5])
+
+## test()    
+## test2()
+## print len(getallPaths_v2(MITmap, MITmap.getNode('1'), MITmap.getNode('16')))
+
+print bruteForceSearch(MITmap, '1', '26', 1000, 1000)
 #
 # Problem 4: Finding the Shorest Path using Optimized Search Method
 #
@@ -99,8 +223,48 @@ def directedDFS(digraph, start, end, maxTotalDist, maxDistOutdoors):
         If there exists no path that satisfies maxTotalDist and
         maxDistOutdoors constraints, then raises a ValueError.
     """
-    #TODO
-    pass
+    bestPaths = getBestPaths(digraph, digraph.getNode(start), 
+                             digraph.getNode(end))
+    for path in bestPaths:
+        if totalDist(digraph, path) < maxTotalDist \
+                and outdoorDist(digraph, path) < maxDistOutdoors:
+            return [str(p[0]) for p in path]
+    else:
+        raise ValueError('No path fits constraints')
+
+def getBestPaths(digraph, start, end, parents=[], bestFound=[], bestDist=None,
+                 bestOutdoor=None):
+    if type(start) == tuple:
+        startNode = start[0]
+    else:
+        parents = [(start, 0, 0)]
+        startNode = start
+    if startNode == end:
+        return start
+    for path in digraph.childrenOf(startNode):
+        if (path[0] not in [p[0] for p in parents]):
+            dist = totalDist(parents + [path])
+            outdoor = outdoorDist(parents + [path])
+            if bestDist == None or dist <= bestDist or outdoor <=bestOutdoor:
+            ## print 'Parents: {}'.format(parents)
+            ## print 'In {} checking {}'.format(start, path)
+                if path[0] == end:
+                    if bestDist == None or \
+                            (dist <= bestDist and outdoor <= bestOutdoor):
+                        bestFound = parents + [path]
+                        bestDist = dist
+                        bestOutdoor = outdoor
+                    else: #Needs work to get bests
+                        bestFound.append(parents + [path])
+                        bestDist = min(dist, bestDist)
+                        bestOutdoor = min(outdoor, bestOutdoor)
+                else:
+                    getBestPaths(digraph, path, end, parents + [path], 
+                                 bestFound, bestDist, bestOutdoor)
+    if len(parents) == 1:
+        return foundPaths
+    else: return None
+ 
 
 # Uncomment below when ready to test
 ##if __name__ == '__main__':
