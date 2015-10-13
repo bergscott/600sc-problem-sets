@@ -71,8 +71,7 @@ class Digraph(object):
        return node in self.nodes
     def getNode(self, name):
         for n in self.nodes:
-            nodeName = n.getName()
-            if name == nodeName:
+            if name == n.getName():
                 return n
         raise ValueError('Node not in graph')
     def __str__(self):
