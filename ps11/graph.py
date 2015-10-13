@@ -35,6 +35,16 @@ class BuildingRoute(Edge):
     Represents a one directional path between two MIT buildings.  
     """
     def __init__(self, src, dest, distance, outdoorDistance):
+        """
+        Creates a new instance of BuildingRoute with source node SRC,
+        destination Node DEST, total distance DISTANCE, and outdoor distance
+        OUTDOORDISTANCE.
+        src: Node
+        dest: Node
+        distance: int
+        outdoorDistance: int
+        returns: BuildingRoute
+        """
         assert distance >= outdoorDistance
         Edge.__init__(self, src, dest)
         self.distance = distance
@@ -70,6 +80,12 @@ class Digraph(object):
     def hasNode(self, node):
        return node in self.nodes
     def getNode(self, name):
+        """
+        Given name of node, returns that Node if present, otherwise returns
+        ValueError
+        name: a str
+        returns: a Node
+        """
         for n in self.nodes:
             if name == n.getName():
                 return n
@@ -83,6 +99,11 @@ class Digraph(object):
 
 class MITmapGraph(Digraph):
     def addEdge(self, edge):
+        """
+        Adds BuildingRoute to edge list
+        edge: BuildingRoute
+        modifies: self.edges
+        """
         src = edge.getSource()
         dest = edge.getDestination()
         dist = edge.getDistance()

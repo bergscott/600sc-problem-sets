@@ -51,7 +51,6 @@ def load_map(mapFilename):
                                      int(splitLine[2]), int(splitLine[3])))
     print "Done!"
     return MITmap
-        
 
 #
 # Problem 3: Finding the Shortest Path using Brute Force Search
@@ -101,25 +100,6 @@ def bruteForceSearch(digraph, start, end, maxTotalDist, maxDistOutdoors):
         raise ValueError('No path fits constraints')
     else:
         return [str(p[0]) for p in bestPath]
-
-## def getallPaths(digraph, start, end, visited=[], parents=[], foundPaths=[]):
-##     if start == end:
-##         return [str(start)]
-##     if parents == []:
-##         visited = visited + [str(start)]
-##     for node in digraph.childrenOf(start):
-##         if (str(node) not in visited):
-##             if node == end:
-##                 foundPaths.append(parents + [str(start), str(node)])
-##             else:
-##                 visited = visited + [str(node)]
-##                 print "Start: {}".format(str(start))
-##                 print "Visited: {}".format(visited)
-##                 getallPaths(digraph, node, end, visited, 
-##                             parents + [str(start)], foundPaths)
-##     if parents == []:
-##         return foundPaths
-##     else: return None
     
 def getallPaths(digraph, start, end, parents=None, foundPaths=None):
     """
@@ -160,12 +140,22 @@ def getallPaths(digraph, start, end, parents=None, foundPaths=None):
     else: return None
 
 def totalDist(path):
+    """
+    Returns the total distance of path, PATH.
+    path: a list of tuple (Node, int, int)
+    returns: an int
+    """
     tot = 0
     for p in path:
         tot += p[1] 
     return tot
 
 def outdoorDist(path):
+    """
+    Returns the outdoor distance of path, PATH.
+    path: a list of tuple (Node, int, int)
+    returns: an int
+    """
     tot = 0
     for p in path:
         tot += p[2] 
@@ -211,6 +201,25 @@ def directedDFS(digraph, start, end, maxTotalDist, maxDistOutdoors):
 
 def getBestPaths(digraph, start, end, parents=None, bestFound=None, 
                  bestDist=None, bestOutdoor=None):
+    """
+    Returns a list of the best paths in DIGRAPH that lead from START node 
+    to END node. A path is considered best if it has the lowest total distance
+    or the lowest outdoor distance.  Ties in one attribute are broken by the 
+    min of the other attribute.  If two best paths have equal total and
+    outdoor distances, they are both included in the returned list.
+
+    digraph: a Digraph
+    start: a Node in digraph
+    end: a Node in digraph
+    parents: list of edge tuple (Node, int, int)
+    bestFound: list of paths (lists of edge tuple (Node, int, int))
+    bestDist: int
+    bestOutdoor: int
+    returns: list of paths (lists of edge tuple (Node, int, int))
+        Node in tuple represents destination of edge (BuildingRoute class)
+        First int in tuple represents total distance of edge
+        Second int in tuple represents outdoor distance of edge
+    """
     if parents == None: parents = []
     if bestFound == None: bestFound = []
     if type(start) == tuple:
@@ -225,8 +234,6 @@ def getBestPaths(digraph, start, end, parents=None, bestFound=None,
             dist = totalDist(parents + [path])
             outdoor = outdoorDist(parents + [path])
             if bestDist == None or dist <= bestDist or outdoor <= bestOutdoor:
-            ## print 'Parents: {}'.format(parents)
-            ## print 'In {} checking {}'.format(start, path)
                 if path[0] == end:
                     bestFound, bestDist, bestOutdoor = get_bests(
                                              parents + [path], dist, outdoor, 
